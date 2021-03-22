@@ -1,0 +1,77 @@
+plugins {
+    id("java")
+    id("idea")
+    id("com.github.ben-manes.versions") version("0.38.0")
+}
+
+group 'github.albertattard'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+sourceSets {
+    integrationTest {
+        java {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+            srcDir file('src/test-integration/java')
+        }
+        resources.srcDir file('src/test-integration/resources')
+    }
+}
+
+idea {
+    module {
+        testSourceDirs += project.sourceSets.integrationTest.java.srcDirs
+        testSourceDirs += project.sourceSets.integrationTest.resources.srcDirs
+    }
+}
+
+configurations {
+    integrationTestImplementation.extendsFrom testImplementation
+    integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
+dependencies {
+    def h2Version = "1.4.200"
+    def hikariVersion = "3.4.5"
+    integrationTestImplementation("com.h2database:h2:${h2Version}")
+    integrationTestImplementation("com.zaxxer:HikariCP:${hikariVersion}")
+
+    def junitVersion = "5.8.0-M1"
+    testImplementation("org.junit.jupiter:junit-jupiter:${junitVersion}")
+
+    def assertJVersion = "3.19.0"
+    testImplementation("org.assertj:assertj-core:${assertJVersion}")
+
+    def mockitoVersion = "3.8.0"
+    testImplementation("org.mockito:mockito-core:${mockitoVersion}")
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events = ['FAILED', 'PASSED', 'SKIPPED', 'STANDARD_OUT']
+    }
+}
+
+task integrationTest(type: Test) {
+    group = 'verification'
+    description = 'Runs the integration tests.'
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    outputs.upToDateWhen { false }
+    shouldRunAfter test
+
+    useJUnitPlatform()
+
+    testLogging {
+        events = ['FAILED', 'PASSED', 'SKIPPED', 'STANDARD_OUT']
+    }
+}
+
+check {
+    dependsOn integrationTest
+}
