@@ -23,5 +23,5 @@ final long count = connection
         .statement("SELECT COUNT(*) FROM name")
         .singleLong();
 
-assertEquals(1,count);
+assertEquals(1, count);
 ```
